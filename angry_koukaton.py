@@ -66,6 +66,18 @@ class Enemy:
     def draw(self, surf):
         if self.alive:
             surf.blit(self.img, self.rect)
+class Drop:
+    def __init__(self, bird):
+        self.bird = bird
+        self.active = True
+
+    def update(self):
+        if self.active:
+            self.bird.pos[1] += 18# 毎フレームの落下量
+            if self.bird.pos[1] >= GROUND_Y - self.bird.rect.height:#こうかとんが地面についたら
+                self.bird.pos[1] = GROUND_Y - self.bird.rect.height#止める
+                self.active = False#落下を終わる
+            self.bird.rect.center = (self.bird.pos[0], self.bird.pos[1])
 
 # === 初期設定 ===
 def reset_game():
@@ -80,6 +92,7 @@ score = 0
 
 # === メインループ ===
 running = True
+drop=None
 while running:
     screen.blit(background, (0, 0))
     screen.blit(background_tei, (0, GROUND_Y, WIDTH, 60))  # 地面
@@ -110,11 +123,18 @@ while running:
             if event.key == pg.K_r:
                 birds, enemys = reset_game()
                 score = 0
+            elif event.key == pg.K_RETURN:  # エンターキーで落下開始
+                drop = Drop(birds[0])
+
 
     # 鳥の更新と描画
     for bird in birds:
         bird.update()
         bird.draw(screen)
+    #  
+    if drop is not None:
+        drop.update()
+    
 
     # 敵の処理
     for enemy in enemys:
