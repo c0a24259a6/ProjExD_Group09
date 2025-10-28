@@ -1,5 +1,6 @@
 import pygame as pg
 import math, os
+import random
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
@@ -25,7 +26,7 @@ BLACK = (0, 0, 0)
 GROUND_Y = HEIGHT - 60
 GRAVITY = 0.5
 POWER = 0.2
-MAX_PULL = 100
+MAX_PULL = 120
 
 # === クラス ===
 class Bird:
@@ -67,16 +68,41 @@ class Enemy:
         if self.alive:
             surf.blit(self.img, self.rect)
 
+class Life:
+    """
+    投げられる回数（ライフ）を管理するクラス
+    """
+    def __init__(self, count):
+        self.max = count
+        self.count = count
+
+    def use(self):
+        """
+        1回分消費（戻り値: True=消費成功, False=残りなし）
+        """
+        if self.count > 0:
+            self.count -= 1
+            return True
+        return False
+
+    def can_throw(self):
+        return self.count > 0
+
+    def reset(self):
+        self.count = self.max
+
+
 # === 初期設定 ===
 def reset_game():
     birds = [Bird((150, GROUND_Y - 40))]
-    enemys = [Enemy((650, GROUND_Y - 40)), Enemy((750, GROUND_Y - 100))]
+    enemys = [Enemy((random.randint(450,850), GROUND_Y - random.randint(0,300))), Enemy((random.randint(450,850), GROUND_Y - random.randint(0,300))),Enemy((random.randint(450,850), GROUND_Y - random.randint(0,300)))]
     return birds, enemys
 
 birds, enemys = reset_game()
 sling_pos = (150, GROUND_Y - 40)
 dragging = False
 score = 0
+life = Life(4)
 
 # === メインループ ===
 running = True
@@ -89,11 +115,30 @@ while running:
             running = False
 
         elif event.type == pg.MOUSEBUTTONDOWN:
-            if birds and not birds[0].launched:
-                dragging = True
+            # クリック時の挙動:
+            # - 現在の鳥がまだ発射前ならドラッグ開始
+            # - 既に発射済みで停止しておりライフが残っていれば新しい鳥をセットしてドラッグ開始（前の鳥は削除）
+            if birds:
+                current = birds[0]
+                if not current.launched:
+                    dragging = True
+                else:
+                    # 発射済みの鳥が "停止" していれば次の鳥をセット可能
+                    if not current.active and life.can_throw():
+                        # 前の鳥を取り除き、新しい鳥をスリング位置にセットしてライフを消費
+                        birds.pop(0)
+                        life.use()
+                        birds.append(Bird(sling_pos))
+                        dragging = True
+            else:
+                # birds が空（念のため）でライフがあれば新しい鳥をセット
+                if life.can_throw():
+                    life.use()
+                    birds.append(Bird(sling_pos))
+                    dragging = True
 
         elif event.type == pg.MOUSEBUTTONUP:
-            if dragging:
+            if dragging and birds:
                 dragging = False
                 mx, my = pg.mouse.get_pos()
                 dx = sling_pos[0] - mx
@@ -110,11 +155,16 @@ while running:
             if event.key == pg.K_r:
                 birds, enemys = reset_game()
                 score = 0
+                life.reset()
 
     # 鳥の更新と描画
-    for bird in birds:
+    for bird in list(birds):  # コピーしてループ（将来削除される可能性があるため）
         bird.update()
         bird.draw(screen)
+        # 画面外に完全に出たら削除（念のため）
+        if bird.pos[0] < -100 or bird.pos[0] > WIDTH + 100 or bird.pos[1] > HEIGHT + 200:
+            if bird in birds:
+                birds.remove(bird)
 
     # 敵の処理
     for enemy in enemys:
@@ -130,13 +180,19 @@ while running:
         mx, my = pg.mouse.get_pos()
         pg.draw.line(screen, BLACK, sling_pos, (mx, my), 3)
         screen.blit(bird_img, bird_img.get_rect(center=(mx, my)))
+    else:
+        # 発射前の鳥が存在するならスリング上に表示（投げていない鳥）
+        if birds and not birds[0].launched:
+            screen.blit(bird_img, bird_img.get_rect(center=sling_pos))
 
     pg.draw.circle(screen, BLACK, sling_pos, 5)
 
-    # スコア
+    # スコアとライフ表示
     font = pg.font.SysFont("meiryo", 24)
     text = font.render(f"Score: {score}  (R: Reset)", True, BLACK)
     screen.blit(text, (20, 20))
+    life_text = font.render(f"Remaining throws: {life.count}", True, BLACK)
+    screen.blit(life_text, (20, 50))
 
     pg.display.flip()
     clock.tick(60)
