@@ -1,5 +1,5 @@
 import pygame as pg
-import math, os, random
+import math, os, random, time
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
@@ -74,13 +74,13 @@ class StageClear:
         self.screen = screen
         self.bg = pg.Surface((1100, 650))
         self.bg.set_alpha(230)
-        self.bg.fill((0, 0, 0))
+        self.bg.fill((0, 100, 100))
         self.sc_font = pg.font.Font(None, 90)
         self.btn_font = pg.font.Font(None, 70)
 
         # ボタン領域
-        self.next_rect = pg.Rect(330, 200, 300, 80)
-        self.end_rect = pg.Rect(330, 340, 300, 80)
+        self.next_rect = pg.Rect(305, 200, 300, 80)
+        self.end_rect = pg.Rect(305, 340, 300, 80)
 
     def draw(self):
         """画面の描画"""
@@ -89,7 +89,7 @@ class StageClear:
 
         # タイトル
         sc_txt = self.sc_font.render("Stage Clear!", True, (0, 255, 0))
-        self.screen.blit(sc_txt, (300, 50))
+        self.screen.blit(sc_txt, (270, 50))
 
         # Nextボタン
         pg.draw.rect(self.screen, (255, 0, 0), self.next_rect)
@@ -104,7 +104,7 @@ class StageClear:
         pg.display.update()
 
     def click(self, event):
-        """クリックイベントの処理"""
+        """クリックの処理"""
         if event.type == pg.MOUSEBUTTONDOWN:
             mx, my = pg.mouse.get_pos()
             if self.next_rect.collidepoint(mx, my):
@@ -138,6 +138,7 @@ sling_pos = (150, GROUND_Y - 40)
 dragging = False
 score = 0
 stage = 0
+bird_count = 0
 
 # === メインループ ===
 running = True
@@ -174,8 +175,12 @@ while running:
 
     # 鳥の更新と描画
     for bird in birds:
-        bird.update()
-        bird.draw(screen)
+        if bird.active:
+            bird.update()
+            bird.draw(screen)
+        else:
+                bird_count += 1
+        
 
     # 敵の処理
     for enemy in enemys:
@@ -209,7 +214,17 @@ while running:
     text = font.render(f"Score: {score}  (R: Reset)", True, BLACK)
     screen.blit(text, (20, 20))
 
+    # ゲームオーバー
+    if bird_count == len(birds) and enemys != []:
+        fonto = pg.font.Font(None, 80)
+        txt = fonto.render("Game Over", True, (255, 0, 0))
+        screen.blit(txt, [WIDTH//2-150, HEIGHT//2])
+        pg.display.update()
+        time.sleep(5)
+        running = False
+
     pg.display.flip()
     clock.tick(60)
+
 
 pg.quit()
