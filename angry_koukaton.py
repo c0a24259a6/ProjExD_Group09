@@ -1,5 +1,5 @@
 import pygame as pg
-import math, os
+import math, os, random
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
@@ -25,7 +25,7 @@ BLACK = (0, 0, 0)
 GROUND_Y = HEIGHT - 60
 GRAVITY = 0.5
 POWER = 0.2
-MAX_PULL = 100
+MAX_PULL = 120
 
 # === クラス ===
 class Bird:
@@ -94,12 +94,12 @@ def reset_game():
     # Shieldの幅と高さを定義
     shields = []  # まず、空のリストを用意
     shield_count = 2  # 生成したい壁の数を設定
-    shield_start_x = 600  # 1つ目の壁のx座標
-    shield_interval = 100 # 壁と壁の間隔
-    shield_width = 20  # 幅を20に設定
-    shield_height = bird_img.get_rect().height * 4  # 高さを鳥の画像の2倍に設定
 
     for i in range(shield_count):
+        shield_start_x = random.randint(300,750)  # 1つ目の壁のx座標
+        shield_interval = 100 # 壁と壁の間隔
+        shield_width = 15  # 幅を設定
+        shield_height = bird_img.get_rect().height * random.randint(3,8)  # 高さ設定
         x = shield_start_x + i * shield_interval # shield_countの数だけ壁を生成
         y = GROUND_Y - shield_height
         shields.append(Shield((x, y), shield_width, shield_height)) # shieldsリストに追加
