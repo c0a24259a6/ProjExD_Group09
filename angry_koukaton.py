@@ -66,6 +66,8 @@ class Enemy:
     def draw(self, surf):
         if self.alive:
             surf.blit(self.img, self.rect)
+
+
 class Drop:
     def __init__(self, bird):
         self.bird = bird
