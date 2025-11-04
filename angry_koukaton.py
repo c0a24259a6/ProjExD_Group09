@@ -68,31 +68,22 @@ class Enemy:
             surf.blit(self.img, self.rect)
 # === Shieldクラスの追加 ===
 class Shield:
-    """防御壁を定義するクラス"""
     def __init__(self, pos, width, height):
-        """
-        Shieldオブジェクトの初期化
-        pos:    矩形の左上の座標 (x, y)
-        width:  矩形の幅
-        height: 矩形の高さ
-        """
+        
+        # Shieldオブジェクトの初期化
+        # pos:    矩形の左上の座標 (x, y)
+        # width:  矩形の幅
+        # height: 矩形の高さ
+        
         # 位置と大きさを持つ四角形(Rect)オブジェクトを作成
         self.rect = pg.Rect(pos[0], pos[1], width, height)
-        # 壁の色をBLUEに設定
+        # 壁の色をBLACKに設定
         self.color = BLACK
         # 壁が存在しているかどうかのフラグ（Trueなら表示、Falseなら非表示）
         self.alive = True
 
     def draw(self, surf):
-        """
-        壁を描画するメソッド
-        surf: 描画対象の画面
-        """
         # self.alive が True の場合のみ壁を描画する
-        if self.alive:
-            pg.draw.rect(surf, self.color, self.rect)
-
-    def draw(self, surf):
         if self.alive:
             pg.draw.rect(surf, self.color, self.rect)
 
@@ -104,19 +95,14 @@ def reset_game():
     shields = []  # まず、空のリストを用意
     shield_count = 2  # 生成したい壁の数を設定
     shield_start_x = 600  # 1つ目の壁のx座標
-    shield_interval = 80 # 壁と壁の間隔
+    shield_interval = 100 # 壁と壁の間隔
     shield_width = 20  # 幅を20に設定
-    shield_height = bird_img.get_rect().height * 2  # 高さを鳥の画像の2倍に設定
+    shield_height = bird_img.get_rect().height * 4  # 高さを鳥の画像の2倍に設定
 
- 
     for i in range(shield_count):
-        # x座標をずらしながらShieldオブジェクトを作成
-        x = shield_start_x + i * shield_interval
-        y1 = GROUND_Y - shield_height
-        # 作成したオブジェクトをshieldsリストに追加
-        shields.append(Shield((x, y1), shield_width, shield_height))
-        y2 = GROUND_Y - shield_height * 2
-        shields.append(Shield((x, y2), shield_width, shield_height))
+        x = shield_start_x + i * shield_interval # shield_countの数だけ壁を生成
+        y = GROUND_Y - shield_height
+        shields.append(Shield((x, y), shield_width, shield_height)) # shieldsリストに追加
     return birds, enemys, shields
 
 
@@ -162,15 +148,14 @@ while running:
     for bird in birds:
         bird.update()
         bird.draw(screen)
-     # 盾の処理
+     # 盾の処理と描画
     for shield in shields:
         shield.draw(screen) # 盾を描画
         for bird in birds:
             # 鳥と盾の衝突判定
             # 条件：鳥が発射済み(launched) AND 盾が存在(alive) AND 鳥と盾の矩形が衝突しているか
             if bird.launched and shield.alive and shield.rect.colliderect(bird.rect):
-                shield.alive = False # 盾を破壊（非表示に）
-                bird.vel[0] *= -0.5 # 鳥のX方向(横)の速度を反転させて跳ね返らせる
+                bird.vel[0] = -1.0 # 鳥のX方向(横)の速度を反転させて跳ね返らせる
 
     # 敵の処理
     for enemy in enemys:
@@ -189,14 +174,6 @@ while running:
         screen.blit(bird_img, bird_img.get_rect(center=(mx, my)))
 
     pg.draw.circle(screen, BLACK, sling_pos, 5)
-    # 盾を描画
-    for shield in shields:
-        shield.draw(screen) # 盾を描画
-        for bird in birds:
-            # 鳥と盾の衝突判定
-            if bird.launched and shield.alive and shield.rect.colliderect(bird.rect):
-                shield.alive = False # 盾を破壊
-                bird.vel[0] *= -0.5 # 鳥のX方向の速度を反転させて跳ね返らせる
 
     # スコア
     font = pg.font.SysFont("meiryo", 24)
