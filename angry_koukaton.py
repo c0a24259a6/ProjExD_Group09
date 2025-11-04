@@ -212,6 +212,30 @@ while running:
             running = False
                         
 
+    # === 弾道予測 ===
+    if dragging:
+        mx, my = pg.mouse.get_pos()
+        dx = sling_pos[0] - mx
+        dy = sling_pos[1] - my
+        dist = math.hypot(dx, dy)
+        if dist > MAX_PULL:
+            scale = MAX_PULL / dist
+            dx *= scale
+            dy *= scale
+
+        # 予測軌道の点を描く
+        vx = dx * POWER
+        vy = dy * POWER
+        temp_x, temp_y = sling_pos
+        for i in range(1, 15):  # 点の数
+            t = i * 45 / 60.0  
+            x = temp_x + vx * t
+            y = temp_y + vy * t + 0.5 * GRAVITY * (t ** 2)
+            if y > GROUND_Y:  
+                break
+            pg.draw.circle(screen, (100, 100, 100), (int(x), int(y)), 3)
+                    
+
     # スリング描画
     if dragging:
         mx, my = pg.mouse.get_pos()
