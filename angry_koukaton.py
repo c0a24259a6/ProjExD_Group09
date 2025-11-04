@@ -136,6 +136,8 @@ class StageClear:
                 if result:
                     return result
             clock.tick(30)
+
+            
 class Life:
     """
     投げられる回数（ライフ）を管理するクラス
@@ -160,6 +162,19 @@ class Life:
         self.count = self.max
 
 
+class Drop:
+    def __init__(self, bird):
+        self.bird = bird
+        self.active = True
+
+    def update(self):
+        if self.active:
+            self.bird.pos[1] += 18# 毎フレームの落下量
+            if self.bird.pos[1] >= GROUND_Y - self.bird.rect.height:#こうかとんが地面についたら
+                self.bird.pos[1] = GROUND_Y - self.bird.rect.height#止める
+                self.active = False#落下を終わる
+            self.bird.rect.center = (self.bird.pos[0], self.bird.pos[1])
+
 # === 初期設定 ===
 def reset_game():
     birds = [Bird((150, GROUND_Y - 40))]
@@ -177,6 +192,7 @@ bird_count = 0
 
 # === メインループ ===
 running = True
+drop=None
 while running:
     screen.blit(background, (0, 0))
     screen.blit(background_tei, (0, GROUND_Y, WIDTH, 60))  # 地面
@@ -227,6 +243,8 @@ while running:
                 birds, enemys, life = reset_game()
                 score = 0
                 life.reset()
+            elif event.key == pg.K_RETURN:  # エンターキーで落下開始
+                drop = Drop(birds[0])
 
     # 鳥の更新と描画
     for bird in birds:  # コピーしてループ（将来削除される可能性があるため）
@@ -245,6 +263,10 @@ while running:
             pg.display.update()
             time.sleep(2)
             running = False
+
+    if drop is not None:
+        drop.update()
+    
 
     # 敵の処理
     for enemy in enemys:
@@ -283,19 +305,6 @@ while running:
     screen.blit(text, (20, 20))
     life_text = font.render(f"Remaining throws: {life.count - 1}", True, BLACK)
     screen.blit(life_text, (20, 50))
-
-    # ゲームオーバー判定 
-    if life.count == 0 and enemys != []:
-        bo_img = pg.Surface((1100, 650))
-        pg.draw.rect(bo_img, (0, 0, 0), pg.Rect(0, 0, 1100, 650))
-        bo_img.set_alpha(200)
-        fonto = pg.font.Font(None, 80)
-        txt = fonto.render("Game Over", True, (255, 0, 0))
-        bo_img.blit(txt, [300, 240])
-        screen.blit(bo_img, [0, 0])
-        pg.display.update()
-        time.sleep(2)
-        running = False
 
     pg.display.flip()
     clock.tick(60)
