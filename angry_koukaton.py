@@ -68,6 +68,7 @@ class Enemy:
         if self.alive:
             surf.blit(self.img, self.rect)
 
+
 class StageClear:
     """
     ステージクリア後の画面を管理するクラス"""
