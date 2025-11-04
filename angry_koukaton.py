@@ -175,6 +175,29 @@ class Drop:
                 self.active = False#落下を終わる
             self.bird.rect.center = (self.bird.pos[0], self.bird.pos[1])
 
+class Guide:
+    """鳥の弾道予測（点線表示）を管理するクラス"""
+    def __init__(self, color, dot_radius, dot_count, gap):
+        self.color = color
+        self.dot_radius = dot_radius
+        self.dot_count = dot_count
+        self.gap = gap
+
+    def draw(self, surf, start_pos, dx, dy, power, gravity, ground_y):
+        """弾道を描画"""
+        vx = dx * power
+        vy = dy * power
+        temp_x, temp_y = start_pos
+
+        for i in range(1, self.dot_count):
+            t = i * self.gap
+            x = temp_x + vx * t
+            y = temp_y + vy * t + 0.5 * gravity * (t ** 2)
+            if y > ground_y:
+                break
+            pg.draw.circle(surf, self.color, (int(x), int(y)), self.dot_radius)
+
+
 # === 初期設定 ===
 def reset_game():
     birds = [Bird((150, GROUND_Y - 40))]
@@ -188,6 +211,9 @@ dragging = False
 score = 0
 stage = 0
 bird_count = 0
+guide = Guide(color=(0, 0, 0), dot_radius=2, dot_count=15, gap=45/60.0)
+guide_count = 0
+guide_onoff = "off"
 
 
 # === メインループ ===
@@ -245,6 +271,29 @@ while running:
                 life.reset()
             elif event.key == pg.K_RETURN:  # エンターキーで落下開始
                 drop = Drop(birds[0])
+            if event.key == pg.K_g:
+                guide_count += 1
+
+    # === 弾道予測 ===
+    if guide_count % 2 == 1:
+        if dragging:
+            mx, my = pg.mouse.get_pos()
+            dx = sling_pos[0] - mx
+            dy = sling_pos[1] - my
+            dist = math.hypot(dx, dy)
+            if dist > MAX_PULL:
+                scale = MAX_PULL / dist
+                dx *= scale
+                dy *= scale
+
+            guide.draw(screen, sling_pos, dx, dy, POWER, GRAVITY, GROUND_Y)
+        guide_onoff = "on"
+    else:
+        guide_onoff = "off"
+    guide_font = pg.font.SysFont("meiryo", 24)
+    guide_text = guide_font.render(f"Guide:{guide_onoff}", True, BLACK)
+    screen.blit(guide_text, (20, 80))
+
 
     # 鳥の更新と描画
     for bird in birds:  # コピーしてループ（将来削除される可能性があるため）
@@ -285,7 +334,6 @@ while running:
             birds, enemys, life = reset_game()  # reset_game(stage)
         elif sentaku == "end":
             running = False
-                        
 
     # スリング描画
     if dragging:
