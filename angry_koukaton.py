@@ -1,5 +1,5 @@
 import pygame as pg
-import math, os
+import math, os, random, time
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
@@ -25,7 +25,8 @@ BLACK = (0, 0, 0)
 GROUND_Y = HEIGHT - 60
 GRAVITY = 0.5
 POWER = 0.2
-MAX_PULL = 100
+MAX_PULL = 120
+
 
 # === クラス ===
 class Bird:
@@ -67,16 +68,87 @@ class Enemy:
         if self.alive:
             surf.blit(self.img, self.rect)
 
+class StageClear:
+    """
+    ステージクリア後の画面を管理するクラス"""
+    def __init__(self, screen: pg.Surface):
+        """
+        引数：screen:スクリーンに表示させるため
+        """
+        self.screen = screen
+        self.bg = pg.Surface((1100, 650))
+        self.bg.set_alpha(230)
+        self.bg.fill((0, 100, 100))
+        self.sc_font = pg.font.Font(None, 90)
+        self.btn_font = pg.font.Font(None, 70)
+
+        # ボタン領域
+        self.next_rect = pg.Rect(305, 200, 300, 80)
+        self.end_rect = pg.Rect(305, 340, 300, 80)
+
+    def draw(self):
+        """
+        画面の描画
+        """
+        # 背景
+        self.screen.blit(self.bg, (0, 0))
+
+        # タイトル
+        sc_txt = self.sc_font.render("Stage Clear!", True, (0, 255, 0))
+        self.screen.blit(sc_txt, (270, 50))
+
+        # Nextボタン
+        pg.draw.rect(self.screen, (255, 0, 0), self.next_rect)
+        next_txt = self.btn_font.render("Next Stage", True, (255, 255, 255))
+        self.screen.blit(next_txt, (self.next_rect.x + 30, self.next_rect.y + 20))
+
+        # Endボタン
+        pg.draw.rect(self.screen, (100, 100, 100), self.end_rect)
+        end_txt = self.btn_font.render("End", True, (255, 255, 255))
+        self.screen.blit(end_txt, (self.end_rect.x + 100, self.end_rect.y + 20))
+
+        pg.display.update()
+
+    def click(self, event):
+        """
+        クリックの処理
+        引数：event:下のsentaku関数で使用
+        """
+        if event.type == pg.MOUSEBUTTONDOWN:
+            mx, my = pg.mouse.get_pos()
+            if self.next_rect.collidepoint(mx, my):
+                return "next"
+            elif self.end_rect.collidepoint(mx, my):
+                return "end"
+        elif event.type == pg.QUIT:
+            return "end"
+        return None
+
+    def sentaku(self):
+        """
+        画面ループ：ユーザーの選択を待つ"""
+        clock = pg.time.Clock()
+        while True:
+            self.draw()
+            for event in pg.event.get():
+                result = self.click(event)
+                if result:
+                    return result
+            clock.tick(30)
+
+
 # === 初期設定 ===
 def reset_game():
     birds = [Bird((150, GROUND_Y - 40))]
-    enemys = [Enemy((650, GROUND_Y - 40)), Enemy((750, GROUND_Y - 100))]
+    enemys = [Enemy((random.randint(450,850), GROUND_Y - random.randint(0,300))), Enemy((random.randint(450,850), GROUND_Y - random.randint(0,300)))]
     return birds, enemys
 
 birds, enemys = reset_game()
 sling_pos = (150, GROUND_Y - 40)
 dragging = False
 score = 0
+stage = 0
+bird_count = 0
 
 # === メインループ ===
 running = True
@@ -113,8 +185,12 @@ while running:
 
     # 鳥の更新と描画
     for bird in birds:
-        bird.update()
-        bird.draw(screen)
+        if bird.active:
+            bird.update()
+            bird.draw(screen)
+        else:
+                bird_count += 1
+        
 
     # 敵の処理
     for enemy in enemys:
@@ -124,6 +200,16 @@ while running:
                 if bird.launched and enemy.rect.colliderect(bird.rect):
                     enemy.alive = False
                     score += 100
+                    enemys.remove(enemy)
+    if enemys == []:
+        stageclear = StageClear(screen)
+        sentaku = stageclear.sentaku()
+        if sentaku == "next":
+            stage += 1
+            birds, enemys = reset_game()  # reset_game(stage)
+        elif sentaku == "end":
+            running = False
+                        
 
     # スリング描画
     if dragging:
@@ -138,7 +224,21 @@ while running:
     text = font.render(f"Score: {score}  (R: Reset)", True, BLACK)
     screen.blit(text, (20, 20))
 
+    # ゲームオーバー
+    if bird_count == len(birds) and enemys != []:
+        bo_img = pg.Surface((1100, 650))
+        pg.draw.rect(bo_img, (0, 0, 0), pg.Rect(0, 0, 1100, 650))
+        bo_img.set_alpha(200)
+        fonto = pg.font.Font(None, 80)
+        txt = fonto.render("Game Over", True, (255, 0, 0))
+        bo_img.blit(txt, [300, 240])
+        screen.blit(bo_img, [0, 0])
+        pg.display.update()
+        time.sleep(4)
+        running = False
+
     pg.display.flip()
     clock.tick(60)
+
 
 pg.quit()
