@@ -194,6 +194,15 @@ while running:
     life_text = font.render(f"Remaining throws: {life.count}", True, BLACK)
     screen.blit(life_text, (20, 50))
 
+    # ゲームオーバー判定 
+    if life.count == 0 and any(enemy.alive for enemy in enemys):
+        font_big = pg.font.SysFont("meiryo", 60, bold=True)
+        game_over_text = font_big.render("GAME OVER", True, (255, 0, 0))
+        screen.blit(game_over_text, (WIDTH//2 - 150, HEIGHT//2 - 30))
+        pg.display.flip()
+        pg.time.wait(2000)  # 2秒表示
+        running = False
+
     pg.display.flip()
     clock.tick(60)
 
