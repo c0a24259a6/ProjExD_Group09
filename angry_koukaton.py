@@ -69,8 +69,12 @@ class Enemy:
             surf.blit(self.img, self.rect)
 
 class StageClear:
-    """ステージクリア後の画面を管理するクラス"""
+    """
+    ステージクリア後の画面を管理するクラス"""
     def __init__(self, screen: pg.Surface):
+        """
+        引数：screen:スクリーンに表示させるため
+        """
         self.screen = screen
         self.bg = pg.Surface((1100, 650))
         self.bg.set_alpha(230)
@@ -83,7 +87,9 @@ class StageClear:
         self.end_rect = pg.Rect(305, 340, 300, 80)
 
     def draw(self):
-        """画面の描画"""
+        """
+        画面の描画
+        """
         # 背景
         self.screen.blit(self.bg, (0, 0))
 
@@ -104,7 +110,10 @@ class StageClear:
         pg.display.update()
 
     def click(self, event):
-        """クリックの処理"""
+        """
+        クリックの処理
+        引数：event:下のsentaku関数で使用
+        """
         if event.type == pg.MOUSEBUTTONDOWN:
             mx, my = pg.mouse.get_pos()
             if self.next_rect.collidepoint(mx, my):
@@ -116,7 +125,8 @@ class StageClear:
         return None
 
     def sentaku(self):
-        """画面ループ：ユーザーの選択を待つ"""
+        """
+        画面ループ：ユーザーの選択を待つ"""
         clock = pg.time.Clock()
         while True:
             self.draw()
@@ -216,11 +226,15 @@ while running:
 
     # ゲームオーバー
     if bird_count == len(birds) and enemys != []:
+        bo_img = pg.Surface((1100, 650))
+        pg.draw.rect(bo_img, (0, 0, 0), pg.Rect(0, 0, 1100, 650))
+        bo_img.set_alpha(200)
         fonto = pg.font.Font(None, 80)
         txt = fonto.render("Game Over", True, (255, 0, 0))
-        screen.blit(txt, [WIDTH//2-150, HEIGHT//2])
+        bo_img.blit(txt, [300, 240])
+        screen.blit(bo_img, [0, 0])
         pg.display.update()
-        time.sleep(5)
+        time.sleep(4)
         running = False
 
     pg.display.flip()
