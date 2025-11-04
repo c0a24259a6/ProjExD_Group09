@@ -195,6 +195,7 @@ class Drop:
                 self.active = False#落下を終わる
             self.bird.rect.center = (self.bird.pos[0], self.bird.pos[1])
 
+
 class Guide:
     """鳥の弾道予測（点線表示）を管理するクラス"""
     def __init__(self, color, dot_radius, dot_count, gap):
@@ -323,7 +324,7 @@ while running:
     else:
         guide_onoff = "off"
     guide_font = pg.font.SysFont("meiryo", 24)
-    guide_text = guide_font.render(f"Guide:{guide_onoff}", True, BLACK)
+    guide_text = guide_font.render(f"Guide:{guide_onoff}(G)", True, BLACK)
     screen.blit(guide_text, (20, 80))
 
 
