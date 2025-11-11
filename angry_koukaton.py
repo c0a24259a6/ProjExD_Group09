@@ -220,9 +220,11 @@ class Guide:
 
 
 # === 初期設定 ===
-def reset_game():
+def reset_game(count:int):
     birds = [Bird((150, GROUND_Y - 40))]
-    enemys = [Enemy((random.randint(450,850), GROUND_Y - random.randint(0,300))), Enemy((random.randint(450,850), GROUND_Y - random.randint(0,300)))]
+    enemys = []
+    for i in range(count):
+        enemys.append(Enemy((random.randint(450,850), GROUND_Y - random.randint(0,300))))
     life = Life(4)
     # Shieldの幅と高さを定義
     shields = []  # まず、空のリストを用意
@@ -238,7 +240,8 @@ def reset_game():
     return birds, enemys, life, shields
 
 
-birds, enemys, life, shields = reset_game()
+enemy_count = 2
+birds, enemys, life, shields = reset_game(enemy_count)
 sling_pos = (150, GROUND_Y - 40)
 dragging = False
 score = 0
@@ -250,12 +253,13 @@ guide_onoff = "off"
 clear_count = 1
 
 
+
 # === メインループ ===
 running = True
 drop=None
 while running:
     screen.blit(background, (0, 0))
-    screen.blit(background_tei, (0, GROUND_Y, WIDTH, 60))  # 地面
+    screen.blit(background_tei, (0, GROUND_Y, WIDTH, 60)) # 地面
 
     for event in pg.event.get():
         if event.type == pg.QUIT:
@@ -300,9 +304,10 @@ while running:
 
         elif event.type == pg.KEYDOWN:
             if event.key == pg.K_r:
-                birds, enemys, life, shields = reset_game()
+                birds, enemys, life, shields = reset_game(enemy_count)
                 score = 0
                 life.reset()
+                enemy_count = 2
             elif event.key == pg.K_RETURN:  # エンターキーで落下開始
                 drop = Drop(birds[0])
             if event.key == pg.K_g:
@@ -353,7 +358,7 @@ while running:
     for shield in shields:
         for enemy in enemys:
             if shield.alive and shield.rect.colliderect(enemy.rect):
-                birds, enemys, life, shields = reset_game()
+                birds, enemys, life, shields = reset_game(enemy_count)
         shield.draw(screen) # 盾を描画
         for bird in birds:
             # 鳥と盾の衝突判定
@@ -377,7 +382,13 @@ while running:
         sentaku = stageclear.sentaku(clear_count)
         if sentaku == "next":
             clear_count += 1
-            birds, enemys, life, shields = reset_game()  # reset_game(stage)
+            birds, enemys, life, shields = reset_game(enemy_count)  # reset_game(stage)
+            if clear_count == 6:
+                enemy_count += 1
+            elif clear_count == 11:
+                enemy_count += 1
+            elif clear_count == 16:
+                enemy_count += 1
         elif sentaku == "end":
             running = False
     
