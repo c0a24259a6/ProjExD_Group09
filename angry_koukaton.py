@@ -107,7 +107,7 @@ class StageClear:
         self.next_rect = pg.Rect(305, 200, 300, 80)
         self.end_rect = pg.Rect(305, 340, 300, 80)
 
-    def draw(self):
+    def draw(self, a:int):
         """
         画面の描画
         """
@@ -115,7 +115,7 @@ class StageClear:
         self.screen.blit(self.bg, (0, 0))
 
         # タイトル
-        sc_txt = self.sc_font.render("Stage Clear!", True, (0, 255, 0))
+        sc_txt = self.sc_font.render(f"Stage{a}" " Clear!", True, (0, 255, 0))
         self.screen.blit(sc_txt, (270, 50))
 
         # Nextボタン
@@ -145,12 +145,12 @@ class StageClear:
             return "end"
         return None
 
-    def sentaku(self):
+    def sentaku(self, a:int):
         """
         画面ループ：ユーザーの選択を待つ"""
         clock = pg.time.Clock()
         while True:
-            self.draw()
+            self.draw(a)
             for event in pg.event.get():
                 result = self.click(event)
                 if result:
@@ -247,6 +247,7 @@ bird_count = 0
 guide = Guide(color=(0, 0, 0), dot_radius=2, dot_count=15, gap=45/60.0)
 guide_count = 0
 guide_onoff = "off"
+clear_count = 1
 
 
 # === メインループ ===
@@ -350,6 +351,9 @@ while running:
         drop.update()
     # 盾の処理と描画
     for shield in shields:
+        for enemy in enemys:
+            if shield.alive and shield.rect.colliderect(enemy.rect):
+                birds, enemys, life, shields = reset_game()
         shield.draw(screen) # 盾を描画
         for bird in birds:
             # 鳥と盾の衝突判定
@@ -367,11 +371,12 @@ while running:
                     enemy.alive = False
                     score += 100
                     enemys.remove(enemy)
+    # クリア判定
     if enemys == []:
         stageclear = StageClear(screen)
-        sentaku = stageclear.sentaku()
+        sentaku = stageclear.sentaku(clear_count)
         if sentaku == "next":
-            stage += 1
+            clear_count += 1
             birds, enemys, life, shields = reset_game()  # reset_game(stage)
         elif sentaku == "end":
             running = False
@@ -395,6 +400,7 @@ while running:
     screen.blit(text, (20, 20))
     life_text = font.render(f"Remaining throws: {life.count - 1}", True, BLACK)
     screen.blit(life_text, (20, 50))
+
 
     pg.display.flip()
     clock.tick(60)
